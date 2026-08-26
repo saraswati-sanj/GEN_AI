@@ -1,0 +1,18 @@
+# Environment & Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.env
+.venv/
+env/
+venv/
+
+# Large Datasets (> 100MB GitHub Limit)
+*.csv
+*.bin
+
+# Database & Chroma
+*.sqlite3
+*.db
+backend/chroma_db/
+chroma_db/
