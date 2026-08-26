@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign In — NutriLens AI</title>
+  <meta name="description" content="Log in to NutriLens AI to access your personalized nutritional health evaluations and synchronized scan history.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Glassmorphism Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .auth-page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      z-index: 10;
+    }
+    .auth-card-standalone {
+      width: 100%;
+      max-width: 440px;
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .auth-header .brand-icon {
+      font-size: 2.5rem;
+      color: var(--primary);
+      margin-bottom: 0.75rem;
+      filter: drop-shadow(0 0 16px var(--primary-glow));
+    }
+    .auth-header h1 {
+      font-size: 1.75rem;
+      margin-bottom: 0.35rem;
+    }
+    .auth-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .auth-footer-links {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+    .quick-guest-btn {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      width: 100%;
+      color: var(--text-dim);
+      font-size: 0.85rem;
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+    .quick-guest-btn:hover {
+      color: var(--text-main);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Animated Floating Glow Orbs -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+  <div class="bg-glow glow-4"></div>
+
+  <div class="auth-page-wrapper">
+    <div class="auth-card-standalone">
+      
+      <div class="auth-header">
+        <i class="fa-solid fa-leaf brand-icon"></i>
+        <h1>Welcome to <span class="gradient-text">NutriLens AI</span></h1>
+        <p>Sign in to access clinical RAG analysis & synchronized history</p>
+      </div>
+
+      <div id="login-alert" class="auth-alert hidden"></div>
+
+      <form id="standalone-login-form">
+        <div class="form-group">
+          <label for="login-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+          <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="username" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+            <button type="button" class="btn-password-toggle" id="btn-toggle-pwd" aria-label="Toggle password visibility">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.25rem;">
+          <button type="button" id="btn-fill-demo" class="chip" style="font-size:0.75rem; padding:0.3rem 0.6rem;">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> 1-Click Demo Fill
+          </button>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block">
+            <i class="fa-solid fa-right-to-bracket"></i> <span class="btn-text">Sign In</span>
+          </button>
+        </div>
+      </form>
+
+      <div class="auth-footer-links">
+        Don't have an account? <a href="register.html" class="auth-link">Create Account</a>
+      </div>
+
+      <a href="dashboard.html" class="quick-guest-btn">
+        <i class="fa-solid fa-arrow-right"></i> Continue as Guest to Dashboard
+      </a>
+
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    const API_BASE = "/api/v1";
+
+    // Auto-redirect if already logged in
+    if (localStorage.getItem("nutrilens_token")) {
+      window.location.href = "dashboard.html";
+    }
+
+    const form = document.getElementById("standalone-login-form");
+    const emailInput = document.getElementById("login-email");
+    const passwordInput = document.getElementById("login-password");
+    const submitBtn = document.getElementById("btn-login-submit");
+    const alertBox = document.getElementById("login-alert");
+    const togglePwdBtn = document.getElementById("btn-toggle-pwd");
+
+    togglePwdBtn.addEventListener("click", () => {
+      const isPwd = passwordInput.type === "password";
+      passwordInput.type = isPwd ? "text" : "password";
+      togglePwdBtn.innerHTML = isPwd ? `<i class="fa-solid fa-eye-slash"></i>` : `<i class="fa-solid fa-eye"></i>`;
+    });
+
+    const demoBtn = document.getElementById("btn-fill-demo");
+    if (demoBtn) {
+      demoBtn.addEventListener("click", () => {
+        emailInput.value = "sanjana_eval@example.com";
+        passwordInput.value = "SecurePassword123!";
+      });
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if (!email || !password) return;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Authenticating...`;
+      alertBox.classList.add("hidden");
+
+      try {
+        const res = await fetch(`${API_BASE}/users/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Invalid email or password.");
+        }
+
+        // Save token and user details
+        localStorage.setItem("nutrilens_token", data.access_token);
+        localStorage.setItem("nutrilens_user", JSON.stringify(data.user));
+        if (data.user) {
+          localStorage.setItem("nutrilens_profile", JSON.stringify({
+            age: data.user.age || 30,
+            health_conditions: data.user.health_conditions || {},
+            allergies: data.user.allergies || [],
+            preferred_language: data.user.preferred_language || "en"
+          }));
+        }
+
+        alertBox.className = "auth-alert auth-alert-success";
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Sign in successful! Redirecting...`;
+        alertBox.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 600);
+
+      } catch (err) {
+        alertBox.className = "auth-alert auth-alert-error";
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${err.message}`;
+        alertBox.classList.remove("hidden");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-right-to-bracket"></i> Sign In`;
+      }
+    });
+  </script>
+</body>
+</html>

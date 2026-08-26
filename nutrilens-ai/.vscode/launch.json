@@ -1,0 +1,36 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "FastAPI: NutriLens AI Server",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "uvicorn",
+      "args": [
+        "app.main:app",
+        "--reload",
+        "--reload-exclude",
+        "chroma_db",
+        "--reload-exclude",
+        "*.db",
+        "--host",
+        "0.0.0.0",
+        "--port",
+        "8000"
+      ],
+      "cwd": "${workspaceFolder}/backend",
+      "jinja": true
+    },
+    {
+      "name": "Ingest Knowledge Base (ChromaDB)",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/scripts/ingest_knowledge.py",
+      "cwd": "${workspaceFolder}/backend",
+      "args": [
+        "--reset"
+      ],
+      "console": "integratedTerminal"
+    }
+  ]
+}

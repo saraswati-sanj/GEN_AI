@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NutriLens AI — Generative AI Barcode Food Health Analyzer</title>
+  <meta name="description" content="Scan food barcodes to get instant Generative AI health assessments, RAG scientific evidence, and personalized nutritional guidance in English, Hindi, Kannada & Tamil.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Custom Glassmorphism CSS -->
+  <link rel="stylesheet" href="css/style.css">
+  
+  <!-- ZXing Barcode Library for Browser Camera Stream -->
+  <script src="https://unpkg.com/@zxing/library@latest"></script>
+</head>
+<body>
+
+  <!-- Background Glow Accents -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+
+  <!-- Navigation Bar -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <div class="brand" id="brand-logo">
+        <i class="fa-solid fa-leaf brand-icon"></i>
+        <div class="brand-text">
+          <span class="brand-name">NutriLens <span class="accent-text">AI</span></span>
+          <span class="brand-tagline">Barcode Health & Scientific RAG</span>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <!-- Language Selector -->
+        <div class="language-picker">
+          <i class="fa-solid fa-globe"></i>
+          <select id="language-select" aria-label="Select Response Language">
+            <option value="en" selected>English</option>
+            <option value="hi">हिंदी (Hindi)</option>
+            <option value="kn">ಕನ್ನಡ (Kannada)</option>
+            <option value="ta">தமிழ் (Tamil)</option>
+          </select>
+        </div>
+
+        <!-- Profile Button -->
+        <button id="btn-open-profile" class="btn btn-outline" title="User Health Profile">
+          <i class="fa-solid fa-user-doctor"></i>
+          <span class="btn-text">Health Profile</span>
+          <span id="profile-badge" class="badge badge-sm badge-info hidden">Set</span>
+        </button>
+
+        <!-- History Button -->
+        <button id="btn-toggle-history" class="btn btn-outline" title="Scan History">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span class="btn-text">History</span>
+        </button>
+
+        <!-- Guest Auth Button -->
+        <button id="btn-open-auth" class="btn btn-primary" title="Log In or Sign Up">
+          <i class="fa-solid fa-right-to-bracket"></i>
+          <span class="btn-text">Sign In</span>
+        </button>
+
+        <!-- Authenticated User Dropdown Menu -->
+        <div id="user-nav-menu" class="user-menu-dropdown hidden">
+          <button id="btn-user-dropdown" class="btn btn-outline user-profile-pill" aria-haspopup="true" aria-expanded="false">
+            <div class="user-avatar-sm" id="nav-user-avatar"><i class="fa-solid fa-user"></i></div>
+            <span id="nav-user-name" class="user-display-name">User</span>
+            <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+          </button>
+          <div id="user-dropdown-popover" class="dropdown-popover glass hidden">
+            <div class="dropdown-user-info">
+              <div class="user-avatar-md" id="popover-user-avatar"><i class="fa-solid fa-user"></i></div>
+              <div class="user-info-text">
+                <strong id="popover-user-name">User Name</strong>
+                <span id="popover-user-email">user@example.com</span>
+              </div>
+            </div>
+            <hr class="dropdown-divider">
+            <button id="btn-nav-profile" class="dropdown-item" type="button">
+              <i class="fa-solid fa-user-pen"></i> Edit Health Profile
+            </button>
+            <button id="btn-nav-history" class="dropdown-item" type="button">
+              <i class="fa-solid fa-clock-rotate-left"></i> My Scan History
+            </button>
+            <hr class="dropdown-divider">
+            <button id="btn-logout" class="dropdown-item item-danger" type="button">
+              <i class="fa-solid fa-arrow-right-from-bracket"></i> Log Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="container main-content">
+
+    <!-- HERO SCANNER SECTION -->
+    <section id="scanner-section" class="card glass hero-scanner">
+      <div class="hero-header text-center">
+        <h1 class="hero-title">Decode Packaged Food <span class="gradient-text">In Seconds</span></h1>
+        <p class="hero-subtitle">Scan any product barcode to unlock instant clinical AI health analysis, ingredient safety risks, and regulatory compliance.</p>
+      </div>
+
+      <!-- Scan Mode Tabs -->
+      <div class="scan-tabs">
+        <button class="scan-tab-btn active" data-mode="camera">
+          <i class="fa-solid fa-camera"></i> Live Camera Scanner
+        </button>
+        <button class="scan-tab-btn" data-mode="upload">
+          <i class="fa-solid fa-upload"></i> Upload Barcode Image
+        </button>
+        <button class="scan-tab-btn" data-mode="manual">
+          <i class="fa-solid fa-keyboard"></i> Manual Barcode
+        </button>
+      </div>
+
+      <!-- Mode 1: Camera Scanner View -->
+      <div id="mode-camera" class="scan-viewport active">
+        <div class="camera-wrapper">
+          <video id="camera-video" playsinline></video>
+          <div class="scan-guide-box">
+            <div class="corner corner-tl"></div>
+            <div class="corner corner-tr"></div>
+            <div class="corner corner-bl"></div>
+            <div class="corner corner-br"></div>
+            <div class="laser-line"></div>
+          </div>
+          <div id="camera-overlay-status" class="camera-status">Point camera at barcode</div>
+        </div>
+        <div class="camera-controls">
+          <button id="btn-start-camera" class="btn btn-primary"><i class="fa-solid fa-video"></i> Start Camera</button>
+          <button id="btn-stop-camera" class="btn btn-secondary hidden"><i class="fa-solid fa-video-slash"></i> Stop Camera</button>
+        </div>
+      </div>
+
+      <!-- Mode 2: File Upload View -->
+      <div id="mode-upload" class="scan-viewport hidden">
+        <div class="upload-dropzone" id="dropzone">
+          <i class="fa-solid fa-cloud-arrow-up dropzone-icon"></i>
+          <h3>Drag & Drop Barcode Image Here</h3>
+          <p>Supports PNG, JPG, JPEG, WEBP formats</p>
+          <input type="file" id="file-input" accept="image/*" class="hidden">
+          <button id="btn-browse-file" class="btn btn-outline"><i class="fa-solid fa-folder-open"></i> Choose File</button>
+        </div>
+        <div id="upload-preview" class="upload-preview hidden">
+          <img id="preview-img" src="" alt="Uploaded Barcode Preview">
+          <button id="btn-remove-preview" class="btn-icon"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+      </div>
+
+      <!-- Mode 3: Manual Input View -->
+      <div id="mode-manual" class="scan-viewport hidden">
+        <form id="manual-form" class="manual-input-group">
+          <input type="text" id="manual-barcode-input" placeholder="e.g. 8901058852309 (EAN / UPC)" required minlength="8" maxlength="20">
+          <button type="submit" class="btn btn-primary"><i class="fa-solid fa-magnifying-glass"></i> Analyze Product</button>
+        </form>
+      </div>
+
+      <!-- Quick Sample Barcodes -->
+      <div class="sample-barcodes">
+        <span class="sample-label"><i class="fa-solid fa-bolt"></i> Quick Test Barcodes:</span>
+        <div class="sample-chips">
+          <button class="chip" data-barcode="8901058852309"><i class="fa-solid fa-bowl-food"></i> Maggi Noodles</button>
+          <button class="chip" data-barcode="5449000000996"><i class="fa-solid fa-bottle-water"></i> Coca-Cola</button>
+          <button class="chip" data-barcode="8901491101837"><i class="fa-solid fa-cookie"></i> Kurkure Chips</button>
+          <button class="chip" data-barcode="8901262010054"><i class="fa-solid fa-cube"></i> Amul Butter</button>
+          <button class="chip" data-barcode="3017620422003"><i class="fa-solid fa-jar"></i> Nutella Spread</button>
+          <button class="chip" data-barcode="8901607000184"><i class="fa-solid fa-wheat-awn"></i> Quaker Oats</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOADING SPINNER -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="spinner-card glass">
+        <div class="spinner"></div>
+        <h3 id="loading-text">Analyzing Barcode & RAG Context...</h3>
+        <p class="loading-subtext">Fetching OpenFoodFacts data, searching ChromaDB vector store, and running Gemini AI clinical evaluation...</p>
+      </div>
+    </div>
+
+    <!-- ANALYSIS RESULTS SECTION -->
+    <section id="results-section" class="results-section hidden">
+      
+      <!-- Product Header Card -->
+      <div class="card glass product-header-card">
+        <div class="product-info-grid">
+          <div class="product-image-container">
+            <img id="product-img" src="" alt="Product Image" class="product-img-fallback">
+          </div>
+          <div class="product-details">
+            <div class="product-badges">
+              <span id="nutriscore-badge" class="badge badge-nutri">Nutri-Score: -</span>
+              <span id="nova-badge" class="badge badge-nova">NOVA Group: -</span>
+              <span id="barcode-display-badge" class="badge badge-mono">Barcode: -</span>
+            </div>
+            <h2 id="product-name" class="product-name">Product Name</h2>
+            <h4 id="product-brand" class="product-brand"><i class="fa-solid fa-industry"></i> Brand Name</h4>
+            <p id="product-category" class="product-category"><i class="fa-solid fa-tags"></i> Category</p>
+          </div>
+
+          <!-- Overall Health Gauge Dial -->
+          <div class="health-score-gauge-card">
+            <div class="gauge-wrapper">
+              <svg class="gauge-svg" viewBox="0 0 120 120">
+                <circle class="gauge-bg" cx="60" cy="60" r="50"></circle>
+                <circle id="gauge-fill" class="gauge-fill" cx="60" cy="60" r="50"></circle>
+              </svg>
+              <div class="gauge-value">
+                <span id="score-number">0</span>
+                <span class="score-max">/100</span>
+              </div>
+            </div>
+            <div class="gauge-verdict">
+              <div id="verdict-title" class="verdict-title">Evaluating...</div>
+              <div id="advice-badge" class="badge badge-advice">Advice</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analysis Tabs Navigation -->
+      <div class="result-tabs-bar">
+        <button class="result-tab active" data-tab="tab-risks">
+          <i class="fa-solid fa-user-shield"></i> Health Risks & Personal Fit
+        </button>
+        <button class="result-tab" data-tab="tab-ingredients">
+          <i class="fa-solid fa-list-check"></i> Ingredients Analysis
+        </button>
+        <button class="result-tab" data-tab="tab-additives">
+          <i class="fa-solid fa-flask-vial"></i> Additives & Harmful Substances
+        </button>
+        <button class="result-tab" data-tab="tab-nutrition">
+          <i class="fa-solid fa-chart-pie"></i> Nutrition & FSSAI Guidelines
+        </button>
+        <button class="result-tab tab-urgent-impact" data-tab="tab-health-impacts">
+          <i class="fa-solid fa-biohazard"></i> Harmful Health Effects & Organ Toxicity
+        </button>
+        <button class="result-tab" data-tab="tab-alternatives">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> Alternatives & Tips
+        </button>
+      </div>
+
+      <!-- TAB 1: HEALTH RISKS & USER PROFILE FIT -->
+      <div id="tab-risks" class="tab-content active">
+        <div class="card glass">
+          <div class="section-title-bar">
+            <h3><i class="fa-solid fa-heart-pulse icon-accent"></i> Personalized Health Risk Assessment</h3>
+            <span class="subtitle-hint">Evaluated against active user health profile & scientific evidence</span>
+          </div>
+
+          <div id="user-profile-summary-banner" class="profile-banner">
+            <!-- Rendered dynamically -->
+          </div>
+
+          <div id="health-risks-grid" class="cards-grid">
+            <!-- Risk cards rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: INGREDIENTS BREAKDOWN -->
+      <div id="tab-ingredients" class="tab-content hidden">
+        <div class="card glass">
+          <div class="section-title-bar">
+            <h3><i class="fa-solid fa-seedling icon-accent"></i> Ingredient Safety & Function Breakdown</h3>
+          </div>
+          <div class="raw-ingredients-box">
+            <strong>Raw Ingredient Declaration:</strong>
+            <p id="raw-ingredients-text">Fetching ingredients...</p>
+          </div>
+          <div id="ingredients-list-container" class="ingredients-table-container">
+            <!-- Ingredient items rendered here -->
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: ADDITIVES & HARMFUL INGREDIENTS -->
+      <div id="tab-additives" class="tab-content hidden">
+        <div class="grid-2col">
+          <!-- Harmful Ingredients -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-triangle-exclamation icon-warning"></i> Harmful Compounds Detected</h3>
+            </div>
+            <div id="harmful-ingredients-container" class="harmful-list">
+              <!-- Harmful ingredients items -->
+            </div>
+          </div>
+
+          <!-- INS Food Additives -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-flask icon-accent"></i> INS Food Additives & E-Numbers</h3>
+            </div>
+            <div id="additives-container" class="additives-list">
+              <!-- Additives items -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: NUTRITION & FSSAI GUIDELINES -->
+      <div id="tab-nutrition" class="tab-content hidden">
+        <div class="grid-2col">
+          <!-- Nutrition Facts Summary -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-chart-column icon-accent"></i> Nutritional Facts Summary (per 100g)</h3>
+            </div>
+            <div id="nutrition-grid" class="nutrition-meters-grid">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- FSSAI & Regulatory RAG Summary -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-scale-balanced icon-accent"></i> FSSAI & Global Regulatory Compliance</h3>
+            </div>
+            <div class="fssai-box">
+              <i class="fa-solid fa-shield-halved fssai-icon"></i>
+              <div id="fssai-summary-text" class="fssai-text">Evaluating regulatory limits...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: HARMFUL HEALTH EFFECTS & ORGAN TOXICITY MATRIX -->
+      <div id="tab-health-impacts" class="tab-content hidden">
+        <div class="card glass">
+          <div class="health-impacts-header">
+            <div class="health-impacts-title">
+              <i class="fa-solid fa-triangle-exclamation impact-warning-icon"></i>
+              <div>
+                <h3 style="color:#fff; font-size:1.3rem;">Harmful Clinical Consequences & Organ Toxicity Analysis</h3>
+                <p class="subtitle-hint" style="color:var(--text-muted);">Physiological degradation vectors, chronic disease triggers & organ load</p>
+              </div>
+            </div>
+            <div id="impact-severity-pill" class="badge badge-lg badge-danger">High Toxicity Vector</div>
+          </div>
+
+          <!-- Organ System Impact Grid -->
+          <div id="organ-impact-grid" class="organ-grid">
+            <!-- Dynamically populated organ impact cards -->
+          </div>
+
+          <!-- Acute vs Chronic Timeline Comparison -->
+          <div class="section-title-bar" style="margin-top: 1.5rem;">
+            <h3><i class="fa-solid fa-hourglass-half icon-accent"></i> Timeline of Physiological Damage</h3>
+          </div>
+          <div class="timeline-grid">
+            <div class="timeline-card timeline-card-acute">
+              <div class="timeline-card-header">
+                <i class="fa-solid fa-bolt" style="color:var(--accent-amber);"></i> Acute Immediate Reaction (1 - 6 Hours)
+              </div>
+              <ul id="acute-effects-list" class="styled-list" style="margin-top: 0.5rem;">
+                <!-- Acute effects rendered here -->
+              </ul>
+            </div>
+            <div class="timeline-card timeline-card-chronic">
+              <div class="timeline-card-header">
+                <i class="fa-solid fa-dna" style="color:var(--accent-pink);"></i> Chronic Long-Term Hazards (Regular Consumption)
+              </div>
+              <ul id="chronic-effects-list" class="styled-list" style="margin-top: 0.5rem;">
+                <!-- Chronic effects rendered here -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 6: HEALTHIER ALTERNATIVES & RECOMMENDATIONS -->
+      <div id="tab-alternatives" class="tab-content hidden">
+        <div class="grid-2col">
+          <!-- Personal Recommendations -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-user-doctor icon-accent"></i> Actionable Dietitian Advice</h3>
+            </div>
+            <ul id="recommendations-list" class="styled-list">
+              <!-- Recommendations list -->
+            </ul>
+          </div>
+
+          <!-- Healthier Product Alternatives -->
+          <div class="card glass">
+            <div class="section-title-bar">
+              <h3><i class="fa-solid fa-arrow-trend-up icon-success"></i> Healthier Alternatives</h3>
+            </div>
+            <div id="alternatives-container" class="alternatives-list">
+              <!-- Alternatives cards -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SCAN HISTORY SECTION -->
+    <section id="history-section" class="history-section hidden">
+      <div class="card glass">
+        <div class="section-title-bar flex-between">
+          <div>
+            <h2><i class="fa-solid fa-clock-rotate-left icon-accent"></i> Scan History</h2>
+            <p class="subtitle-hint">Review past scanned food products and health evaluations</p>
+          </div>
+          <button id="btn-clear-history" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash-can"></i> Clear History</button>
+        </div>
+
+        <div id="history-list-container" class="history-grid">
+          <!-- History items rendered here -->
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- AUTHENTICATION MODAL (LOGIN / REGISTER) -->
+  <div id="auth-modal" class="modal-overlay hidden">
+    <div class="modal-card glass auth-modal-card">
+      <div class="modal-header">
+        <div class="auth-brand-badge">
+          <i class="fa-solid fa-leaf brand-icon"></i>
+          <span>NutriLens <strong>AI</strong></span>
+        </div>
+        <button id="btn-close-auth" class="btn-close" type="button" aria-label="Close Authentication Dialog"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Auth Tabs Switcher -->
+      <div class="auth-tabs">
+        <button id="tab-btn-login" class="auth-tab-btn active" type="button">
+          <i class="fa-solid fa-right-to-bracket"></i> Log In
+        </button>
+        <button id="tab-btn-register" class="auth-tab-btn" type="button">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Auth Feedback Message -->
+        <div id="auth-alert" class="auth-alert hidden"></div>
+
+        <!-- FORM 1: LOGIN -->
+        <form id="login-form" class="auth-form active">
+          <div class="auth-intro">
+            <h3>Welcome Back</h3>
+            <p>Sign in to sync your scans, clinical evaluations, and health profile across devices.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="login-email"><i class="fa-solid fa-envelope"></i> Email Address</label>
+            <input type="email" id="login-email" placeholder="name@example.com" required autocomplete="username">
+          </div>
+
+          <div class="form-group">
+            <label for="login-password"><i class="fa-solid fa-lock"></i> Password</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+              <button type="button" class="btn-password-toggle" data-target="login-password" aria-label="Toggle password visibility">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="auth-quick-hint">
+            <span>Don't have an account? <a href="#" id="link-to-register" class="auth-link">Sign up free</a></span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-right-to-bracket"></i> <span class="submit-text">Log In</span>
+            </button>
+          </div>
+        </form>
+
+        <!-- FORM 2: REGISTER -->
+        <form id="register-form" class="auth-form hidden">
+          <div class="auth-intro">
+            <h3>Create Free Account</h3>
+            <p>Personalize AI health warnings for your medical profile, conditions, and allergies.</p>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-fullname"><i class="fa-solid fa-user"></i> Full Name</label>
+            <input type="text" id="reg-fullname" placeholder="e.g. Sanjana Rao" autocomplete="name">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-email"><i class="fa-solid fa-envelope"></i> Email Address *</label>
+            <input type="email" id="reg-email" placeholder="name@example.com" required autocomplete="email">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-password"><i class="fa-solid fa-lock"></i> Password (min 8 characters) *</label>
+            <div class="password-input-wrapper">
+              <input type="password" id="reg-password" placeholder="••••••••" minlength="8" required autocomplete="new-password">
+              <button type="button" class="btn-password-toggle" data-target="reg-password" aria-label="Toggle password visibility">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="grid-2col-form">
+            <div class="form-group">
+              <label for="reg-age"><i class="fa-solid fa-calendar"></i> Age</label>
+              <input type="number" id="reg-age" min="1" max="120" placeholder="e.g. 28">
+            </div>
+
+            <div class="form-group">
+              <label for="reg-language"><i class="fa-solid fa-globe"></i> Preferred Language</label>
+              <select id="reg-language">
+                <option value="en" selected>English</option>
+                <option value="hi">हिंदी (Hindi)</option>
+                <option value="kn">ಕನ್ನಡ (Kannada)</option>
+                <option value="ta">தமிழ் (Tamil)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label><i class="fa-solid fa-heart-pulse"></i> Health Conditions</label>
+            <div class="toggles-grid toggles-grid-compact">
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-diabetes">
+                <span class="toggle-label"><i class="fa-solid fa-cube"></i> Diabetes</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-hypertension">
+                <span class="toggle-label"><i class="fa-solid fa-heart-pulse"></i> Hypertension</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-kidney">
+                <span class="toggle-label"><i class="fa-solid fa-kidney"></i> Kidney Issue</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-pregnancy">
+                <span class="toggle-label"><i class="fa-solid fa-baby"></i> Pregnancy</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-heart">
+                <span class="toggle-label"><i class="fa-solid fa-circle-h"></i> Heart Issue</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="reg-cond-celiac">
+                <span class="toggle-label"><i class="fa-solid fa-wheat-awn-circle-exclamation"></i> Celiac</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="reg-allergies"><i class="fa-solid fa-shield-virus"></i> Known Food Allergies</label>
+            <input type="text" id="reg-allergies" placeholder="e.g. Peanuts, Gluten, Lactose, Soy">
+          </div>
+
+          <div class="auth-quick-hint">
+            <span>Already have an account? <a href="#" id="link-to-login" class="auth-link">Sign in</a></span>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="btn-register-submit" class="btn btn-primary btn-block">
+              <i class="fa-solid fa-user-plus"></i> <span class="submit-text">Create Account</span>
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- HEALTH PROFILE MODAL -->
+  <div id="profile-modal" class="modal-overlay hidden">
+    <div class="modal-card glass">
+      <div class="modal-header">
+        <h3><i class="fa-solid fa-user-pen icon-accent"></i> Personal Health Profile</h3>
+        <button id="btn-close-profile" class="btn-close"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div class="modal-body">
+        <form id="profile-form">
+          
+          <div class="form-group">
+            <label for="profile-age">Age (Years)</label>
+            <input type="number" id="profile-age" min="1" max="120" placeholder="e.g. 35">
+          </div>
+
+          <div class="form-group">
+            <label>Health Conditions (Select all that apply)</label>
+            <div class="toggles-grid">
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-diabetes">
+                <span class="toggle-label"><i class="fa-solid fa-cube"></i> Diabetes Mellitus</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-hypertension">
+                <span class="toggle-label"><i class="fa-solid fa-heart-pulse"></i> Hypertension (High BP)</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-kidney">
+                <span class="toggle-label"><i class="fa-solid fa-kidney"></i> Chronic Kidney Disease</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-pregnancy">
+                <span class="toggle-label"><i class="fa-solid fa-baby"></i> Pregnancy / Lactation</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-heart">
+                <span class="toggle-label"><i class="fa-solid fa-circle-h"></i> Heart Disease</span>
+              </label>
+              <label class="toggle-card">
+                <input type="checkbox" id="cond-celiac">
+                <span class="toggle-label"><i class="fa-solid fa-wheat-awn-circle-exclamation"></i> Celiac Disease</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="profile-allergies">Known Food Allergies (Comma separated)</label>
+            <input type="text" id="profile-allergies" placeholder="e.g. Peanuts, Gluten, Lactose, Soy, Sulfites">
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-block"><i class="fa-solid fa-floppy-disk"></i> Save Profile</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- App Script -->
+  <script src="js/scanner.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Free Account — NutriLens AI</title>
+  <meta name="description" content="Sign up for NutriLens AI to personalize food health risk assessments, detect allergens, and track your dietary scan history.">
+  
+  <!-- Google Fonts: Inter & Outfit -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Glassmorphism Stylesheet -->
+  <link rel="stylesheet" href="css/style.css">
+
+  <style>
+    .auth-page-wrapper {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem 1rem;
+      position: relative;
+      z-index: 10;
+    }
+    .auth-card-standalone {
+      width: 100%;
+      max-width: 520px;
+      padding: 2.5rem;
+      border-radius: var(--radius-lg);
+      background: var(--bg-card);
+      border: 1px solid var(--bg-card-border);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .auth-header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .auth-header .brand-icon {
+      font-size: 2.2rem;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 0 16px var(--primary-glow));
+    }
+    .auth-header h1 {
+      font-size: 1.6rem;
+      margin-bottom: 0.35rem;
+    }
+    .auth-header p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+    }
+    .auth-footer-links {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Animated Floating Glow Orbs -->
+  <div class="bg-glow glow-1"></div>
+  <div class="bg-glow glow-2"></div>
+  <div class="bg-glow glow-3"></div>
+  <div class="bg-glow glow-4"></div>
+
+  <div class="auth-page-wrapper">
+    <div class="auth-card-standalone">
+      
+      <div class="auth-header">
+        <i class="fa-solid fa-leaf brand-icon"></i>
+        <h1>Create Your <span class="gradient-text">NutriLens AI</span> Account</h1>
+        <p>Personalize clinical warnings for your health conditions & allergies</p>
+      </div>
+
+      <div id="register-alert" class="auth-alert hidden"></div>
+
+      <form id="standalone-register-form">
+        <div class="form-group">
+          <label for="reg-fullname"><i class="fa-solid fa-user"></i> Full Name</label>
+          <input type="text" id="reg-fullname" placeholder="e.g. Sanjana Rao" autocomplete="name" autofocus>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-email"><i class="fa-solid fa-envelope"></i> Email Address *</label>
+          <input type="email" id="reg-email" placeholder="name@example.com" required autocomplete="email">
+        </div>
+
+        <div class="form-group">
+          <label for="reg-password"><i class="fa-solid fa-lock"></i> Password (min 8 characters) *</label>
+          <div class="password-input-wrapper">
+            <input type="password" id="reg-password" placeholder="••••••••" minlength="8" required autocomplete="new-password">
+            <button type="button" class="btn-password-toggle" id="btn-toggle-pwd" aria-label="Toggle password visibility">
+              <i class="fa-solid fa-eye"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="grid-2col-form">
+          <div class="form-group">
+            <label for="reg-age"><i class="fa-solid fa-calendar"></i> Age</label>
+            <input type="number" id="reg-age" min="1" max="120" placeholder="e.g. 28">
+          </div>
+
+          <div class="form-group">
+            <label for="reg-language"><i class="fa-solid fa-globe"></i> Preferred Language</label>
+            <select id="reg-language">
+              <option value="en" selected>English</option>
+              <option value="hi">हिंदी (Hindi)</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label><i class="fa-solid fa-heart-pulse"></i> Health Conditions (Select applicable)</label>
+          <div class="toggles-grid toggles-grid-compact">
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-diabetes">
+              <span class="toggle-label"><i class="fa-solid fa-cube"></i> Diabetes</span>
+            </label>
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-hypertension">
+              <span class="toggle-label"><i class="fa-solid fa-heart-pulse"></i> Hypertension</span>
+            </label>
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-kidney">
+              <span class="toggle-label"><i class="fa-solid fa-kidney"></i> Kidney Issue</span>
+            </label>
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-pregnancy">
+              <span class="toggle-label"><i class="fa-solid fa-baby"></i> Pregnancy</span>
+            </label>
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-heart">
+              <span class="toggle-label"><i class="fa-solid fa-circle-h"></i> Heart Issue</span>
+            </label>
+            <label class="toggle-card">
+              <input type="checkbox" id="cond-celiac">
+              <span class="toggle-label"><i class="fa-solid fa-wheat-awn-circle-exclamation"></i> Celiac</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="reg-allergies"><i class="fa-solid fa-shield-virus"></i> Known Food Allergies</label>
+          <input type="text" id="reg-allergies" placeholder="e.g. Peanuts, Gluten, Lactose, Soy, Sulfites">
+        </div>
+
+        <div class="form-actions" style="margin-top: 1.5rem;">
+          <button type="submit" id="btn-reg-submit" class="btn btn-primary btn-block">
+            <i class="fa-solid fa-user-plus"></i> <span class="btn-text">Create Account</span>
+          </button>
+        </div>
+      </form>
+
+      <div class="auth-footer-links">
+        Already have an account? <a href="login.html" class="auth-link">Sign In</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const API_BASE = "/api/v1";
+
+    const form = document.getElementById("standalone-register-form");
+    const fullnameInput = document.getElementById("reg-fullname");
+    const emailInput = document.getElementById("reg-email");
+    const passwordInput = document.getElementById("reg-password");
+    const ageInput = document.getElementById("reg-age");
+    const languageInput = document.getElementById("reg-language");
+    const allergiesInput = document.getElementById("reg-allergies");
+    const submitBtn = document.getElementById("btn-reg-submit");
+    const alertBox = document.getElementById("register-alert");
+    const togglePwdBtn = document.getElementById("btn-toggle-pwd");
+
+    togglePwdBtn.addEventListener("click", () => {
+      const isPwd = passwordInput.type === "password";
+      passwordInput.type = isPwd ? "text" : "password";
+      togglePwdBtn.innerHTML = isPwd ? `<i class="fa-solid fa-eye-slash"></i>` : `<i class="fa-solid fa-eye"></i>`;
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      const fullName = fullnameInput.value.trim();
+      const age = parseInt(ageInput.value) || 30;
+      const language = languageInput.value || "en";
+      const allergies = allergiesInput.value.split(",").map(s => s.trim()).filter(Boolean);
+
+      const healthConditions = {
+        diabetes: document.getElementById("cond-diabetes").checked,
+        hypertension: document.getElementById("cond-hypertension").checked,
+        kidney_disease: document.getElementById("cond-kidney").checked,
+        pregnancy: document.getElementById("cond-pregnancy").checked,
+        heart_disease: document.getElementById("cond-heart").checked,
+        celiac_disease: document.getElementById("cond-celiac").checked,
+        obesity: false,
+      };
+
+      if (!email || !password) return;
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Creating Account...`;
+      alertBox.classList.add("hidden");
+
+      try {
+        const res = await fetch(`${API_BASE}/users/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            full_name: fullName || null,
+            age,
+            health_conditions: healthConditions,
+            allergies,
+            preferred_language: language,
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          throw new Error(data.detail || "Registration failed. Please check inputs.");
+        }
+
+        // Save token and user
+        localStorage.setItem("nutrilens_token", data.access_token);
+        localStorage.setItem("nutrilens_user", JSON.stringify(data.user));
+        localStorage.setItem("nutrilens_profile", JSON.stringify({
+          age,
+          health_conditions: healthConditions,
+          allergies,
+          preferred_language: language,
+        }));
+
+        alertBox.className = "auth-alert auth-alert-success";
+        alertBox.innerHTML = `<i class="fa-solid fa-circle-check"></i> Account created successfully! Redirecting...`;
+        alertBox.classList.remove("hidden");
+
+        setTimeout(() => {
+          window.location.href = "dashboard.html";
+        }, 600);
+
+      } catch (err) {
+        alertBox.className = "auth-alert auth-alert-error";
+        alertBox.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${err.message}`;
+        alertBox.classList.remove("hidden");
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<i class="fa-solid fa-user-plus"></i> Create Account`;
+      }
+    });
+  </script>
+</body>
+</html>
