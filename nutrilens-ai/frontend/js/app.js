@@ -132,6 +132,11 @@ const elements = {
   impactSeverityPill: document.getElementById("impact-severity-pill"),
   acuteEffectsList: document.getElementById("acute-effects-list"),
   chronicEffectsList: document.getElementById("chronic-effects-list"),
+
+  // Hazard Alert & Red-Flags
+  hazardBannerContainer: document.getElementById("hazard-banner-container"),
+  productHeaderCard: document.getElementById("product-header-card"),
+  productRedFlags: document.getElementById("product-red-flags"),
   
   // History & Profile Modals
   historySection: document.getElementById("history-section"),
@@ -651,6 +656,83 @@ function renderAnalysisResults(scanData) {
     elements.productImg.src = "https://placehold.co/150x150/1e293b/fff?text=Food+Item";
   }
 
+  // 1. Evaluate Red Flags & Toxic Ingredients
+  const n = p.nutriments || {};
+  const sodium_mg = (n.sodium_100g ? n.sodium_100g * 1000 : (n.salt_100g ? (n.salt_100g / 2.5) * 1000 : 0));
+  const sugars = n.sugars_100g || 0;
+  const sat_fat = n.saturated_fat_100g || 0;
+  const nova = p.nova_group || 0;
+  const score = a.overall_health_score !== undefined ? a.overall_health_score : 50;
+
+  const redFlags = [];
+  if (sodium_mg > 500) {
+    redFlags.push({ icon: "fa-triangle-exclamation", text: `${sodium_mg.toFixed(0)}mg Sodium (>50% RDA)` });
+  }
+  if (sat_fat > 3) {
+    redFlags.push({ icon: "fa-oil-well", text: `High Saturated Fat / Palm Oil (${sat_fat.toFixed(1)}g)` });
+  }
+  if (sugars > 10) {
+    redFlags.push({ icon: "fa-cubes-stacked", text: `High Simple Sugars (${sugars.toFixed(1)}g)` });
+  }
+  if (nova === 4) {
+    redFlags.push({ icon: "fa-industry", text: "NOVA 4 Ultra-Processed" });
+  }
+  (a.harmful_ingredients || []).forEach(h => {
+    redFlags.push({ icon: "fa-flask-vial", text: `${h.ingredient || h.name || 'Harmful Compound'}` });
+  });
+
+  // Render Red Flag Chips
+  if (elements.productRedFlags) {
+    elements.productRedFlags.innerHTML = redFlags.map(rf => `
+      <span class="red-flag-pill">
+        <i class="fa-solid ${rf.icon}"></i> ${rf.text}
+      </span>
+    `).join("");
+  }
+
+  // 2. Render Hazard Alert Banner vs Safe Banner & Card Glow
+  if (elements.productHeaderCard) {
+    elements.productHeaderCard.classList.remove("hazard-active", "safe-active");
+  }
+
+  if (elements.hazardBannerContainer) {
+    if (score < 50 || nova === 4 || redFlags.length >= 2) {
+      if (elements.productHeaderCard) elements.productHeaderCard.classList.add("hazard-active");
+      elements.hazardBannerContainer.innerHTML = `
+        <div class="hazard-alert-banner">
+          <div class="hazard-alert-content">
+            <div class="hazard-alert-icon">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+            </div>
+            <div class="hazard-alert-text">
+              <h4><i class="fa-solid fa-radiation"></i> CRITICAL HEALTH ALERT: HIGH-RISK PROCESSED ITEM</h4>
+              <p>Elevated sodium, refined saturated fats, or industrial additives detected. Regular consumption poses metabolic & vascular strain.</p>
+            </div>
+          </div>
+          <div class="hazard-alert-badges">
+            <span class="badge badge-danger"><i class="fa-solid fa-ban"></i> AVOID FREQUENT USE</span>
+            <span class="badge badge-danger"><i class="fa-solid fa-industry"></i> NOVA 4 HAZARD</span>
+          </div>
+        </div>
+      `;
+    } else if (score >= 70) {
+      if (elements.productHeaderCard) elements.productHeaderCard.classList.add("safe-active");
+      elements.hazardBannerContainer.innerHTML = `
+        <div class="safe-alert-banner">
+          <div class="safe-alert-icon">
+            <i class="fa-solid fa-shield-heart"></i>
+          </div>
+          <div class="safe-alert-text">
+            <h4><i class="fa-solid fa-circle-check"></i> HEALTHY & NUTRITIOUS WHOLE FOOD CHOICE</h4>
+            <p>Balanced nutritional density with clean ingredients, compliant with ICMR & WHO daily dietary limits.</p>
+          </div>
+        </div>
+      `;
+    } else {
+      elements.hazardBannerContainer.innerHTML = "";
+    }
+  }
+
   // Nutri-Score & NOVA Badges
   if (p.nutri_score) {
     elements.nutriscoreBadge.textContent = `Nutri-Score: Grade ${p.nutri_score.toUpperCase()}`;
@@ -932,17 +1014,22 @@ function renderIngredientsTab(product, analysis) {
   elements.rawIngredientsText.textContent = product.ingredients_text || "No detailed raw ingredients declaration available.";
 
   const items = analysis.ingredient_explanations || [];
-  elements.ingredientsListContainer.innerHTML = items.map(ing => `
-    <div class="ingredient-item">
-      <div>
-        <div class="ing-name">${ing.name}</div>
-        <div class="ing-purpose">${ing.purpose} — ${ing.notes}</div>
+  const harmfulNames = (analysis.harmful_ingredients || []).map(h => (h.ingredient || h.name || "").toLowerCase());
+
+  elements.ingredientsListContainer.innerHTML = items.map(ing => {
+    const isDangerous = ing.safety_level === 'high_concern' || harmfulNames.some(hn => hn && ing.name.toLowerCase().includes(hn));
+    return `
+      <div class="ingredient-item ${isDangerous ? 'danger-highlight' : ''}">
+        <div>
+          <div class="ing-name">${isDangerous ? '<i class="fa-solid fa-triangle-exclamation" style="color:#f43f5e; margin-right:0.4rem;"></i>' : ''}${ing.name}</div>
+          <div class="ing-purpose">${ing.purpose} — ${ing.notes}</div>
+        </div>
+        <span class="badge badge-${ing.safety_level === 'high_concern' ? 'danger' : (ing.safety_level === 'moderate_concern' ? 'warning' : 'safe')}">
+          ${ing.safety_level.replace('_', ' ')}
+        </span>
       </div>
-      <span class="badge badge-${ing.safety_level === 'high_concern' ? 'danger' : (ing.safety_level === 'moderate_concern' ? 'warning' : 'safe')}">
-        ${ing.safety_level.replace('_', ' ')}
-      </span>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
 function renderAdditivesTab(product, analysis) {

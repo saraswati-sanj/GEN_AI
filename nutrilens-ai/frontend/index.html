@@ -191,8 +191,11 @@
     <!-- ANALYSIS RESULTS SECTION -->
     <section id="results-section" class="results-section hidden">
       
+      <!-- Dynamic Health Alert / Safety Banner -->
+      <div id="hazard-banner-container"></div>
+
       <!-- Product Header Card -->
-      <div class="card glass product-header-card">
+      <div id="product-header-card" class="card glass product-header-card">
         <div class="product-info-grid">
           <div class="product-image-container">
             <img id="product-img" src="" alt="Product Image" class="product-img-fallback">
@@ -206,6 +209,9 @@
             <h2 id="product-name" class="product-name">Product Name</h2>
             <h4 id="product-brand" class="product-brand"><i class="fa-solid fa-industry"></i> Brand Name</h4>
             <p id="product-category" class="product-category"><i class="fa-solid fa-tags"></i> Category</p>
+            
+            <!-- Red-Flag Danger Spotlight Chips -->
+            <div id="product-red-flags" class="red-flags-container"></div>
           </div>
 
           <!-- Overall Health Gauge Dial -->
