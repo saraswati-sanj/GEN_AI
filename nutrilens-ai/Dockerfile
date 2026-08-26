@@ -15,8 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
-# Install lightweight PyTorch CPU build first
-RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
+# Upgrade build tools
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
+
+# Install lightweight PyTorch CPU build
+RUN pip install --no-cache-dir torch --extra-index-url https://download.pytorch.org/whl/cpu
 
 # Install application dependencies
 COPY backend/requirements.txt .
