@@ -1,10 +1,13 @@
-"""
-NutriLens AI — ChromaDB Vector Store & BAAI/bge-small Embedding Service
-Handles document embedding, indexing, and semantic similarity search for RAG.
-"""
 import os
 import logging
 from typing import List, Dict, Any, Optional
+
+try:
+    import torch
+    torch.set_num_threads(1)
+    torch.set_num_interop_threads(1)
+except Exception:
+    pass
 
 import chromadb
 from chromadb.config import Settings as ChromaSettings

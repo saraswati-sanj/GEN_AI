@@ -1,4 +1,5 @@
 # Dockerfile for NutriLens AI FastAPI Backend & Frontend
+# Optimized for low-memory cloud runtimes (e.g. Render Free Tier 512MB RAM)
 
 FROM python:3.10-slim
 
@@ -18,19 +19,29 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code, knowledge base, and frontend code
+# Copy backend code, knowledge base, frontend code, and notebooks
 COPY backend /app/backend
 COPY frontend /app/frontend
 COPY knowledge_base /app/knowledge_base
 COPY notebooks /app/notebooks
 
+# Configure single-thread BLAS/PyTorch to stay strictly within 512MB RAM
+ENV OMP_NUM_THREADS=1 \
+    MKL_NUM_THREADS=1 \
+    OPENBLAS_NUM_THREADS=1 \
+    VECLIB_MAXIMUM_THREADS=1 \
+    NUMEXPR_NUM_THREADS=1 \
+    TOKENIZERS_PARALLELISM=false \
+    PYTHONPATH=/app/backend
+
 # Set working directory to backend
 WORKDIR /app/backend
+
+# Pre-build ChromaDB vector index during Docker build stage (high memory available during build)
+RUN python scripts/ingest_knowledge.py --reset
 
 # Expose port
 EXPOSE 8000
 
-ENV PYTHONPATH=/app/backend
-
-# Run knowledge base ingestion and start Uvicorn server (respects Render $PORT)
-CMD ["sh", "-c", "python scripts/ingest_knowledge.py && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Start Uvicorn directly at runtime with fast startup and low memory footprint
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"]
